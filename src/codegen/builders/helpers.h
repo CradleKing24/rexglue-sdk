@@ -45,6 +45,37 @@ inline const char* crBitName(uint32_t bi) {
     return names[bi & 3];
 }
 
+/**
+ * Emit a CR bit operation: crD = crA <op> crB
+ *
+ * CR bit operations work on individual CR bits (0-31). This helper:
+ * - Maps bit indices to CR field (0-7) and field bit (0-3)
+ * - Emits code to access CR fields by bit name
+ *
+ * @param ctx The builder context
+ * @param op The operation symbol as a string (e.g., "|", "&", "^", "|!", "&!")
+ */
+inline void emitCRBitOperation(BuilderContext& ctx, std::string_view op)
+{
+    uint32_t crD = ctx.insn.operands[0];
+    uint32_t crA = ctx.insn.operands[1];
+    uint32_t crB = ctx.insn.operands[2];
+
+    uint32_t crField_D = crD / 4;
+    uint32_t crBit_D = crD % 4;
+    uint32_t crField_A = crA / 4;
+    uint32_t crBit_A = crA % 4;
+    uint32_t crField_B = crB / 4;
+    uint32_t crBit_B = crB % 4;
+
+    constexpr std::string_view fields[] = { "lt", "gt", "eq", "so" };
+
+    ctx.println("\t{}.{} = {}.{} {} {}.{};",
+        ctx.cr(crField_D), fields[crBit_D],
+        ctx.cr(crField_A), fields[crBit_A], op,
+        ctx.cr(crField_B), fields[crBit_B]);
+}
+
 //=============================================================================
 // Record-Form Helpers
 //=============================================================================
