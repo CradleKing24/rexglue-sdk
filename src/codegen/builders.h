@@ -103,6 +103,7 @@ bool build_xoris(BuilderContext& ctx);
 
 // Conditional Register operations
 bool build_cror(BuilderContext& ctx);
+bool build_crorc(BuilderContext& ctx);
 
 // Equivalence (XNOR)
 bool build_eqv(BuilderContext& ctx);

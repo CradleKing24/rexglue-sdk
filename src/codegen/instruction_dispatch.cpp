@@ -100,6 +100,7 @@ static const std::unordered_map<int, Builder>& GetDispatchTable()
         // Conditional Register
         //=====================================================================
         { PPC_INST_CROR, build_cror },
+        { PPC_INST_CRORC, build_crorc },
 
         //=====================================================================
         // Comparison
