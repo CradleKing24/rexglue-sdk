@@ -106,6 +106,7 @@ bool build_crand(BuilderContext& ctx);
 bool build_crandc(BuilderContext& ctx);
 bool build_creqv(BuilderContext& ctx);
 bool build_crnand(BuilderContext& ctx);
+bool build_crnor(BuilderContext& ctx);
 bool build_cror(BuilderContext& ctx);
 bool build_crorc(BuilderContext& ctx);
 
