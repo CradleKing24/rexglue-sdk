@@ -501,6 +501,13 @@ bool build_crand(BuilderContext& ctx)
     return true;
 }
 
+bool build_crandc(BuilderContext& ctx)
+{
+    // crandc: CR[crD] = CR[crA] & ~CR[crB]
+    emitCRBitOperation(ctx, "&", false, true, false);
+    return true;
+}
+
 bool build_cror(BuilderContext& ctx)
 {
     // cror: CR[crD] = CR[crA] | CR[crB]
