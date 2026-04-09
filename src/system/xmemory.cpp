@@ -720,21 +720,35 @@ bool Memory::InitializeFunctionTable(uint32_t code_base, uint32_t code_size, uin
 
   uint32_t table_size = (code_size + kThunkReserveSize) * 2;
 
-  REXSYS_DEBUG(
-      "Initializing function table at {:08X}, size {:08X} for code {:08X}-{:08X} "
-      "(+{:08X} thunk reserve)",
-      function_table_base_, table_size, code_base, code_base + code_size, kThunkReserveSize);
+  // Select the appropriate heap and alignment based on the code address
+  BaseHeap* target_heap = nullptr;
+  uint32_t alignment = 0;
 
-  // Allocate the function table region in guest memory.
-  // Use the 64k page heap (v80000000) since that's where XEX code lives.
-  if (!heaps_.v80000000.AllocFixed(
-          function_table_base_, table_size, 0x10000,
-          memory::kMemoryAllocationReserve | memory::kMemoryAllocationCommit,
-          memory::kMemoryProtectRead | memory::kMemoryProtectWrite)) {
-    REXSYS_ERROR("Failed to allocate function table at {:08X}", function_table_base_);
+  if (code_base >= 0x80000000 && code_base < 0x90000000) {
+    // XEX code at 0x80000000-0x8FFFFFFF with 64k pages
+    target_heap = &heaps_.v80000000;
+    alignment = 64 * 1024;
+  } else if (code_base >= 0x90000000 && code_base < 0xA0000000) {
+    // XEX code at 0x90000000-0x9FFFFFFF with 4k pages
+    target_heap = &heaps_.v90000000;
+    alignment = 4096;
+  } else {
+    REXKRNL_ERROR("Code address {:08X} is not in a valid XEX code range", code_base);
     function_table_base_ = 0;
     return false;
   }
+
+  REXSYS_DEBUG("Initializing function table at {:08X}, size {:08X} for code {:08X}-{:08X}",
+               function_table_base_, table_size, code_base, code_base + code_size);
+
+  if (!target_heap->AllocFixed(
+        function_table_base_, table_size, alignment,
+        memory::kMemoryAllocationReserve | memory::kMemoryAllocationCommit,
+        memory::kMemoryProtectRead | memory::kMemoryProtectWrite)) {
+        REXKRNL_ERROR("Failed to allocate function table at {:08X}", function_table_base_);
+        function_table_base_ = 0;
+        return false;
+    }
 
   // Zero-initialize the table (nullptr for all entries).
   Zero(function_table_base_, table_size);
